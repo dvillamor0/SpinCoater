@@ -608,7 +608,14 @@ void processCalibration()
     return;
   }
 
-  const uint16_t us = calibrationUs(g_calIndex);
+  uint16_t us = calibrationUs(g_calIndex);
+
+  // Empujón de arranque
+  if (g_calIndex > 1 && g_rpmFilt < 60.0f && (nowMs - g_calPointMs) < 1000UL)
+  {
+      us = 1100;
+  }
+
   esc.writeMicroseconds(us);
 
   const unsigned long elapsed = nowMs - g_calPointMs;
@@ -960,7 +967,12 @@ void loop()
     {
       processRunning();
     }
-    else if (g_state == ST_IDLE || g_state == ST_FAULT)
+    else if (g_state == ST_IDLE)
+    {
+      g_targetRpm = readTargetRpm();
+      escMin();
+    }
+    else if (g_state == ST_FAULT)
     {
       escMin();
     }
